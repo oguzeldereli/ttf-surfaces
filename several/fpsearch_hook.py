@@ -3,6 +3,7 @@ Starts from an fp32 checkpoint A (FS_INIT) and trains every weight W (AdamW, FS_
   twogoal  CE(W) + FS_LAM * KL(A's fp || rounded(W))      (rounding straight-through: W + (round(W) - W).detach())
   noise    CE(W + Z), Z fresh Gaussian of relative norm FS_NOISE per row of every ternary-to-be linear
   ste      CE(rounded(W))                                    (quantisation-aware training from the fp network)
+  plain    CE(W)                                             (the control: the same steps without a rounding goal)
 round = the converter's absmean rounding (convert15.py): alpha_i * clip(round(W / mean|W_i|)).
 Every FS_EVERY steps: snapshot (FS_SNAP/sNNN.pt: state + fp loss + rounded loss on ITERS fixed val batches).
 Run as a ttf.train wrapper with the fp32 shape's arguments; all work happens at the first evaluation, then it exits."""

@@ -72,4 +72,4 @@ PolyForm Noncommercial 1.0.0 (see `LICENSE`).
   networks saved as checkpoints (`BM_SAVE`) for a basin-of-attraction test.
 - `fpmap_hook.py` (snapshots at every evaluation, with the rounding's loss for full-precision runs; `LS_DSEED` changes
   only the data order), `fpsearch_hook.py` (full-precision searches for a network that rounds better: two-goal, noise,
-  STE), `convert15.py` (plain absmean rounding to a TTF checkpoint), `agree.py` (trit agreement between checkpoints).
+  STE, and `plain`, the same steps of fp training as the control), `convert15.py` (plain absmean rounding to a TTF checkpoint), `agree.py` (trit agreement between checkpoints).
