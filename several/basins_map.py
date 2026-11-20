@@ -1,5 +1,6 @@
 """basins_map.py (19 Nov 2026): several trained ternary networks of one shape on one plane, with the measured loss
-surface across them and outward past them.
+surface across them and outward past them. User 19 Nov: "show me graph of multiple basins, like just extend the
+surface outwards until you reach a new basin".
 Plane: origin = the trit-wise median M of three networks A, B, C. Each trit gets one fixed unit vector:
   only X differs from M          -> along X's corner direction (90/210/330 deg, +-20 deg jitter), signed by X's move;
   X and Y differ (X=+1, Y=-1)     -> along dir_X - dir_Y (jitter), signed by X's move;
@@ -160,7 +161,7 @@ def run(model, data, tc, device):
         for y in range(3):
             if y == x0:
                 continue
-            for f in [i / 40 for i in range(0, 51)]:
+            for f in [i / 40 for i in range(0, int(round(40 * float(E("BM_LMAX", "1.25")))) + 1)]:
                 q = (P[x0][0] + f * (P[y][0] - P[x0][0]), P[x0][1] + f * (P[y][1] - P[x0][1]))
                 x, yy, wx, wy = wsolve(q)
                 w = [0.0] * 3; w[x] = wx; w[yy] = wy
