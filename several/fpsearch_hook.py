@@ -90,6 +90,8 @@ def run(model, data, tc, device):
                         m.kd_logp = None
                         _, ce = m(inp, tgt)
                         lo = LAM * kl + ce
+                    elif MODE == "plain":     # control: the same steps of fp cross-entropy, no rounding goal
+                        _, lo = m(inp, tgt)
                     elif MODE == "noise":
                         Wn = dict(P)
                         for k in WK:
