@@ -67,6 +67,11 @@ PolyForm Noncommercial 1.0.0 (see `LICENSE`).
   node). A trit with a net move in exactly one path points into that path's sector of the circle, ordered by the time of
   its final move there; other trits point at random. Full-precision networks enter as their rounding (`conv_snaps.py`),
   with their own loss kept beside it. `plot_multipath.py` draws it.
+- `multipath_map2.py` / `plot_multipath2.py` (use these): the same plane, but every grid point gets one network per path
+  (that path's nearest in-between network, then the fewest legal sideways moves to the point), so each path has a
+  complete sheet with no gaps. The plot shows the lower envelope of the sheets, with a menu for each path's own sheet.
+  v1 kept only the nearest arms within a radius and stitched triangles between cells built from the same stretch of
+  path, which left holes where the nearest arm changed and spikes where neighbouring cells came from different arms.
 - `basins_map.py`: three trained networks on one plane (corners from which network differs where), with straight lines
   between them and past them (`BM_LINES`), rays outward on a log distance scale (`BM_RAY`; `plot_rays.py`), and in-between
   networks saved as checkpoints (`BM_SAVE`) for a basin-of-attraction test.
