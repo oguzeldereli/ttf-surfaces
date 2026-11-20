@@ -13,7 +13,7 @@ items = [a.split("=", 1) for a in sys.argv[2:]]
 specs, titles, heights = [], [], []
 for t, p in items:
     specs.append([{"type": "scene", "colspan": 2}, None]); titles.append(t); heights.append(0.8)
-    multi = "," in p
+    multi = "," in p and "theta" in p
     specs.append([{"type": "xy"}, {"type": "xy"} if multi else None])
     titles += ["is it flat? rise of each surface network above the path, against its sideways moves"]
     if multi:
@@ -62,7 +62,7 @@ def build(d):
 menus, row, sc_i = [], 1, 0
 for title, paths in items:
     runs = [torch.load(p, map_location="cpu", weights_only=False) for p in paths.split(",")]
-    runs.sort(key=lambda d: float(d["tag"].split("theta")[-1]) if "theta" in d["tag"] else 0)
+    runs.sort(key=lambda d: (float(d["tag"].split("theta")[-1].split("_s")[0]) if "theta" in d["tag"] else 0, d["tag"]))
     zmin = min(float(np.nanmin(d["loss"].numpy())) for d in runs)
     zmax = max(max(r["loss"] for r in d["recs"]) for d in runs) + 0.05
     groups = []
@@ -119,7 +119,8 @@ for title, paths in items:
         dom = fig.layout[sc].domain.y
         menus.append({"buttons": btn, "direction": "down", "x": 0.0, "xanchor": "left", "y": dom[1], "yanchor": "top",
                       "active": 0, "showactive": True})
-        th = [float(d["tag"].split("theta")[-1]) for d in runs]
+    if len(runs) > 1 and all("theta" in d["tag"] for d in runs):
+        th = [float(d["tag"].split("theta")[-1].split("_s")[0]) for d in runs]
         plen = [sum(r["moves_since_prev"] for r in d["recs"]) + d["recs"][0]["moves_from_start"] for d in runs]
         straight = [d["recs"][-1]["moves_from_start"] for d in runs]
         fin = [d["recs"][-1]["loss"] for d in runs]
