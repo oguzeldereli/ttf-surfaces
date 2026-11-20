@@ -60,3 +60,16 @@ parameters and about 45 minutes at 110M (31 x 31).
 ## License
 
 PolyForm Noncommercial 1.0.0 (see `LICENSE`).
+
+## Several networks on one plane (`several/`)
+
+- `multipath_map.py`: the surface under several training paths of one shape (a tree: paths may start at another path's
+  node). A trit with a net move in exactly one path points into that path's sector of the circle, ordered by the time of
+  its final move there; other trits point at random. Full-precision networks enter as their rounding (`conv_snaps.py`),
+  with their own loss kept beside it. `plot_multipath.py` draws it.
+- `basins_map.py`: three trained networks on one plane (corners from which network differs where), with straight lines
+  between them and past them (`BM_LINES`), rays outward on a log distance scale (`BM_RAY`; `plot_rays.py`), and in-between
+  networks saved as checkpoints (`BM_SAVE`) for a basin-of-attraction test.
+- `fpmap_hook.py` (snapshots at every evaluation, with the rounding's loss for full-precision runs; `LS_DSEED` changes
+  only the data order), `fpsearch_hook.py` (full-precision searches for a network that rounds better: two-goal, noise,
+  STE), `convert15.py` (plain absmean rounding to a TTF checkpoint), `agree.py` (trit agreement between checkpoints).
