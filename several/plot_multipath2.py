@@ -20,12 +20,15 @@ nodeL = [nd["loss"] for p in P for nd in p["nodes"]]
 if zcap is None:
     zcap = max(nodeL) + 0.5
 Z = np.full((len(P), N * N), np.nan)
-for ci, pi, l in zip(c["cell"], c["path"], c["loss"]):
+R = np.full((len(P), N * N), np.inf)               # sideways moves = distance from the path's nearest point
+for ci, pi, l, r in zip(c["cell"], c["path"], c["loss"], c["moves"]):
     if ci >= 0:
-        Z[pi, ci] = l
-Z = Z.reshape(len(P), N, N)                       # [path, y, x] (meshgrid "xy" order)
+        Z[pi, ci] = l; R[pi, ci] = r
+Z = Z.reshape(len(P), N, N); R = R.reshape(len(P), N, N)   # [path, y, x] (meshgrid "xy" order)
 env = np.nanmin(Z, 0)
 who = np.nanargmin(Z, 0)
+near = np.argmin(R, 0)
+nz = np.take_along_axis(Z, near[None], 0)[0]
 fig = make_subplots(rows=2, cols=1, specs=[[{"type": "scene"}], [{"type": "xy"}]], row_heights=[0.74, 0.26],
                     vertical_spacing=0.05, subplot_titles=["", "loss of each path's networks against evaluation"])
 cs = "Viridis"
@@ -35,12 +38,17 @@ fig.add_trace(go.Surface(x=xs, y=ys, z=np.minimum(env, zcap), surfacecolor=np.mi
                          customdata=np.dstack([env, who]),
                          hovertemplate="loss %{customdata[0]:.3f}<extra>lowest here: path %{customdata[1]}</extra>"),
               row=1, col=1)
+fig.add_trace(go.Surface(x=xs, y=ys, z=np.minimum(nz, zcap), surfacecolor=np.minimum(nz, zcap), colorscale=cs,
+                         cmin=float(np.nanmin(env)), cmax=zcap, showscale=False, opacity=0.9, name="nearest path", visible=False,
+                         customdata=np.dstack([nz, near]),
+                         hovertemplate="loss %{customdata[0]:.3f}<extra>from path %{customdata[1]}</extra>"),
+              row=1, col=1)
 for pi in range(len(P)):
     fig.add_trace(go.Surface(x=xs, y=ys, z=np.minimum(Z[pi], zcap), surfacecolor=np.minimum(Z[pi], zcap), colorscale=cs,
                              cmin=float(np.nanmin(env)), cmax=zcap, showscale=False, opacity=0.9, visible=False,
                              name=f"sheet: {names[pi]}", hovertemplate=f"loss %{{z:.3f}}<extra>{names[pi]}</extra>"),
                   row=1, col=1)
-nsurf = 1 + len(P)
+nsurf = 2 + len(P)
 for pi, p in enumerate(P):
     col = COL[pi % len(COL)]
     nd = p["nodes"]
@@ -69,7 +77,8 @@ ntr = len(fig.data)
 btn = []
 for b in range(nsurf):
     vis = [i == b for i in range(nsurf)] + [True] * (ntr - nsurf)
-    btn.append({"label": "lowest of all paths" if b == 0 else f"sheet: {names[b - 1]}", "method": "restyle",
+    lab = "lowest of all paths" if b == 0 else "nearest path (paths lie on it)" if b == 1 else f"sheet: {names[b - 2]}"
+    btn.append({"label": lab, "method": "restyle",
                 "args": [{"visible": vis}]})
 fig.update_layout(updatemenus=[{"buttons": btn, "direction": "down", "x": 0.0, "y": 1.0, "xanchor": "left",
                                 "yanchor": "top", "showactive": True}])
@@ -86,9 +95,12 @@ G = f"""<div style="font-family:sans-serif;max-width:1150px;margin:12px 20px;lin
 <p><b>How the surface is made.</b> Every height is the measured loss of a real ternary network. For each grid point and
 each path: take the network on that path nearest to the point (between two snapshots: each trit's move gets a random
 time, floats interpolated), then make the fewest legal single-trit moves sideways until the network projects onto the
-grid point. That gives every path its own complete sheet ({N}x{N} networks each). The default view is the lower
-envelope: at each point the lowest of the paths' sheets. The menu at top left shows one path's own sheet; on its own
-sheet a path lies exactly on the surface. Share of the envelope from each path: {share}.</p>
+grid point. That gives every path its own complete sheet ({N}x{N} networks each). The default view takes, at each grid
+point, the lowest network of any path (the lower envelope). A path can float above it: there a network of another path,
+moved sideways, is lower than the path's own network. The menu at top left switches to "nearest path" (each grid point
+from the path closest to it in the plane, so every path lies on the surface, with steps where two paths' regions meet)
+or to one path's own complete sheet. Share of the lower envelope from each path:
+{share}.</p>
 <p style="color:#555">{info}. Heights above {zcap:.2f} drawn at {zcap:.2f}.</p></div>"""
 open(out, "w").write(fig.to_html(include_plotlyjs=True, full_html=True).replace("<body>", "<body>" + G, 1))
 print("wrote", out)
